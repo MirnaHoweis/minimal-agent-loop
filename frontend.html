@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 0.95rem;
+    }
+
+    /* ── INPUT SECTION ── */
+    .input-section {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: #0f0f0f;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #555;
+    }
+
+    input[type="text"]::placeholder {
+      color: #444;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    button:hover { background: #1d4ed8; }
+    button:disabled { background: #1e3a6e; cursor: not-allowed; opacity: 0.6; }
+
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .mode-btn {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #888;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+
+    .mode-btn.active {
+      background: #1e3a6e;
+      border-color: #2563eb;
+      color: #60a5fa;
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+
+    .status-bar.visible { display: flex; }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #333;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESULT SECTION ── */
+    .result-section {
+      display: none;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .result-section.visible { display: block; }
+
+    .result-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #555;
+      margin-bottom: 12px;
+    }
+
+    .result-answer {
+      color: #e0e0e0;
+      line-height: 1.7;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+    }
+
+    .result-meta {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #2a2a2a;
+      display: flex;
+      gap: 20px;
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    .result-meta span { color: #888; }
+
+    /* ── HISTORY SECTION ── */
+    .history-section {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #555;
+    }
+
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid #333;
+      color: #666;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+    }
+
+    .refresh-btn:hover { background: #222; color: #888; }
+
+    .history-item {
+      padding: 14px 0;
+      border-bottom: 1px solid #222;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .history-item:last-child { border-bottom: none; }
+
+    .history-item:hover { background: #1f1f1f; padding-left: 8px; border-radius: 6px; }
+
+    .history-goal {
+      font-size: 0.9rem;
+      color: #ccc;
+      margin-bottom: 4px;
+    }
+
+    .history-meta {
+      font-size: 0.75rem;
+      color: #555;
+      display: flex;
+      gap: 12px;
+    }
+
+    .history-outcome {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #777;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #444;
+      padding: 30px;
+      font-size: 0.9rem;
+    }
+
+    .success-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      margin-right: 4px;
+    }
+
+    .error-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ef4444;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>🤖 Agentic AI</h1>
+  <p class="subtitle">Give the agent a goal — it will plan, execute, and report back.</p>
+
+  <!-- INPUT -->
+  <div class="input-section">
+    <div class="input-row">
+      <input
+        type="text"
+        id="goalInput"
+        placeholder="e.g. Check the weather in Dubai and calculate 25 * 4"
+      />
+      <button id="runBtn" onclick="runAgent()">Run Agent</button>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="syncBtn" onclick="setMode('sync')">⚡ Sync</button>
+      <button class="mode-btn" id="asyncBtn" onclick="setMode('async')">🔄 Async</button>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar" id="statusBar">
+    <div class="spinner"></div>
+    <span id="statusText">Agent is thinking...</span>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-section" id="resultSection">
+    <div class="result-label">Answer</div>
+    <div class="result-answer" id="resultAnswer"></div>
+    <div class="result-meta">
+      <div>⏱ <span id="resultDuration">—</span>s</div>
+      <div>🆔 <span id="resultId">—</span></div>
+      <div>🕐 <span id="resultTime">—</span></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="history-section">
+    <div class="section-header">
+      <div class="section-title">Recent Sessions</div>
+      <button class="refresh-btn" onclick="loadHistory()">↻ Refresh</button>
+    </div>
+    <div id="historyList">
+      <div class="empty-state">No sessions yet — run the agent to see history.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── CONFIGURATION ────────────────────────────────────────────
+  const API_BASE = "http://localhost:8000";
+  // Change this if your API runs on a different port
+
+  let currentMode = "sync";
+  // Tracks whether user chose sync or async mode
+
+  // ── MODE TOGGLE ──────────────────────────────────────────────
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById("syncBtn").classList.toggle("active", mode === "sync");
+    document.getElementById("asyncBtn").classList.toggle("active", mode === "async");
+  }
+
+  // ── MAIN: RUN AGENT ──────────────────────────────────────────
+  async function runAgent() {
+    const goal = document.getElementById("goalInput").value.trim();
+
+    if (!goal) {
+      alert("Please enter a goal first.");
+      return;
+    }
+
+    // Disable button and show status
+    setLoading(true, "Agent is thinking...");
+    hideResult();
+
+    try {
+      if (currentMode === "sync") {
+        await runSync(goal);
+      } else {
+        await runAsync(goal);
+      }
+    } catch (err) {
+      setLoading(false);
+      showResult({
+        answer: `Error: ${err.message}`,
+        duration_seconds: "—",
+        request_id: "—",
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  // ── SYNC MODE ────────────────────────────────────────────────
+  async function runSync(goal) {
+    // POST to /run and wait for the full response
+    const response = await fetch(`${API_BASE}/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goal })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.detail || "API error");
+    }
+
+    const data = await response.json();
+    setLoading(false);
+    showResult(data);
+    loadHistory();
+    // Refresh history after each successful run
+  }
+
+  // ── ASYNC MODE ───────────────────────────────────────────────
+  async function runAsync(goal) {
+    // POST to /run/async — get job_id immediately
+    const response = await fetch(`${API_BASE}/run/async`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goal })
+    });
+
+    const data = await response.json();
+    const jobId = data.job_id;
+
+    setLoading(true, `Job ${jobId} running — polling for results...`);
+
+    // Poll /status/{job_id} every 3 seconds until complete
+    await pollJobStatus(jobId);
+  }
+
+  async function pollJobStatus(jobId) {
+    const maxAttempts = 40;
+    // 40 attempts × 3 seconds = 2 minutes max wait
+
+    for (let i = 0; i < maxAttempts; i++) {
+      await sleep(3000);
+      // Wait 3 seconds between each poll
+
+      const response = await fetch(`${API_BASE}/status/${jobId}`);
+      const data = await response.json();
+
+      setLoading(true, `Job ${jobId} — status: ${data.status} (${i + 1}/${maxAttempts})`);
+
+      if (data.status === "complete") {
+        setLoading(false);
+        showResult({
+          answer: data.answer,
+          duration_seconds: "—",
+          request_id: jobId,
+          timestamp: data.completed_at || new Date().toISOString()
+        });
+        loadHistory();
+        return;
+      }
+
+      if (data.status === "failed") {
+        setLoading(false);
+        showResult({
+          answer: `Job failed: ${data.error}`,
+          duration_seconds: "—",
+          request_id: jobId,
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+    }
+
+    // Timeout
+    setLoading(false);
+    showResult({
+      answer: "Job timed out — the agent took too long to respond.",
+      duration_seconds: "—",
+      request_id: jobId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // ── HISTORY ──────────────────────────────────────────────────
+  async function loadHistory() {
+    try {
+      const response = await fetch(`${API_BASE}/history?limit=5`);
+      const data = await response.json();
+      renderHistory(data.sessions);
+    } catch (err) {
+      console.error("Failed to load history:", err);
+    }
+  }
+
+  function renderHistory(sessions) {
+    const container = document.getElementById("historyList");
+
+    if (!sessions || sessions.length === 0) {
+      container.innerHTML = '<div class="empty-state">No sessions yet.</div>';
+      return;
+    }
+
+    container.innerHTML = sessions.map(s => {
+      const isSuccess = !s.outcome.startsWith("STOPPED");
+      const dot = isSuccess
+        ? '<span class="success-dot"></span>'
+        : '<span class="error-dot"></span>';
+
+      const time = new Date(s.timestamp).toLocaleTimeString();
+      const date = new Date(s.timestamp).toLocaleDateString();
+
+      return `
+        <div class="history-item" onclick="showHistoryItem('${escapeQuotes(s.outcome)}', '${escapeQuotes(s.goal)}')">
+          <div class="history-goal">${s.goal}</div>
+          <div class="history-meta">
+            <div>${dot}${isSuccess ? "Success" : "Stopped"}</div>
+            <div>${s.steps_taken} steps</div>
+            <div>${date} ${time}</div>
+          </div>
+          <div class="history-outcome">${s.outcome}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function showHistoryItem(outcome, goal) {
+    // Clicking a history item shows that session's result
+    document.getElementById("goalInput").value = goal;
+    showResult({
+      answer: outcome,
+      duration_seconds: "—",
+      request_id: "history",
+      timestamp: "—"
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ── UI HELPERS ───────────────────────────────────────────────
+  function setLoading(loading, message = "Agent is thinking...") {
+    const btn = document.getElementById("runBtn");
+    const bar = document.getElementById("statusBar");
+    const statusText = document.getElementById("statusText");
+
+    btn.disabled = loading;
+    btn.textContent = loading ? "Running..." : "Run Agent";
+    bar.classList.toggle("visible", loading);
+    statusText.textContent = message;
+  }
+
+  function showResult(data) {
+    document.getElementById("resultSection").classList.add("visible");
+    document.getElementById("resultAnswer").textContent = data.answer;
+    document.getElementById("resultDuration").textContent = data.duration_seconds;
+    document.getElementById("resultId").textContent = data.request_id;
+    document.getElementById("resultTime").textContent =
+      new Date(data.timestamp).toLocaleTimeString();
+  }
+
+  function hideResult() {
+    document.getElementById("resultSection").classList.remove("visible");
+  }
+
+  function escapeQuotes(str) {
+    return (str || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Allow Enter key to submit
+  document.getElementById("goalInput").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") runAgent();
+  });
+
+  // Load history on page open
+  loadHistory();
+</script>
+
+</body>
+</html>
